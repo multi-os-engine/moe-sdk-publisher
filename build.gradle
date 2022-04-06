@@ -32,7 +32,6 @@ def projectDeps = [
         ':moe.binding.libimobiledevice',
         ':moe.generator.natjgen',
         ':moe.ios.device.launcher',
-        ':proguard:app',
 ]
 
 projectDeps.each { evaluationDependsOn it }
@@ -127,8 +126,8 @@ def getSDKCopySpec() {
                 rename 'moe.generator.natjgen.jar', 'wrapnatjgen.jar'
             }
 
-            from buildfiles(':proguard:app', 'libs') {
-                include 'proguard.jar'
+            from files('/path/to/r8/repo/libs/') {
+                include 'd8.jar'
             }
 
             from files('.') {
