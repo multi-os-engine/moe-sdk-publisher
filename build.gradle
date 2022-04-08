@@ -126,8 +126,8 @@ def getSDKCopySpec() {
                 rename 'moe.generator.natjgen.jar', 'wrapnatjgen.jar'
             }
 
-            from files('/path/to/r8/repo/libs/') {
-                include 'd8.jar'
+            from files('/Users/berstanio/R8/r8/build/libs/') {
+                include 'r8.jar'
             }
 
             from files('.') {
