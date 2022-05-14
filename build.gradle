@@ -174,12 +174,6 @@ def getSDKCopySpec() {
             from files(rootProject.external.moe_core.out.dex2oat_exec.parentFile) {
                 include rootProject.external.moe_core.out.dex2oat_exec.name
             }
-            from files(rootProject.external.moe_core.out.dx_exec.parentFile) {
-                include rootProject.external.moe_core.out.dx_exec.name
-            }
-            from files(rootProject.external.moe_core.out.dx_jar.parentFile) {
-                include rootProject.external.moe_core.out.dx_jar.name
-            }
 
             from buildfiles(':moe.ios.device.launcher', 'libs') {
                 include 'moe.ios.device.launcher.jar'
