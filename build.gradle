@@ -52,6 +52,65 @@ if (!rootProject.hasProperty('moe.tools.sdk.mac_only')) {
     tasks.buildDeps.dependsOn ':prebuild_libimobiledevice_windows'
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Prebuild dex files
+//////////////////////////////////////////////////////////////////////////
+
+task processDexDesugaredJDK(type: JavaExec) {
+    classpath = project.files("/Users/berstanio/R8/r8/build/libs/r8.jar")
+    ext.dexOutput = file("${buildDir}/moe-desugared-dex.jar")
+
+    main 'com.android.tools.r8.L8'
+    args "--lib", rootProject.external.moe_core.out.moe_core_jar, "--min-api", "21", '--desugared-lib', external.moe_core.out.desugarjdk_json, "--output", "${buildDir}/moe-desugared-dex.jar", external.moe_core.out.desugarjdk_jar
+
+    inputs.file(rootProject.external.moe_core.out.moe_core_jar)
+    outputs.file(dexOutput)
+}
+
+task processDexCore(type: JavaExec) {
+    classpath = project.files("/Users/berstanio/R8/r8/build/libs/r8.jar")
+    ext.dexOutput = file("${buildDir}/moe-core-dex.jar")
+
+    main 'com.android.tools.r8.D8'
+    args "--min-api", "21", "--output", "${buildDir}/moe-core-dex.jar", rootProject.external.moe_core.out.moe_core_jar
+
+    inputs.file(rootProject.external.moe_core.out.moe_core_jar)
+    outputs.file(dexOutput)
+}
+
+task processDexiOS(type: JavaExec) {
+    classpath = project.files("/Users/berstanio/R8/r8/build/libs/r8.jar")
+    ext.dexOutput = file("${buildDir}/moe-ios-dex.jar")
+
+    main 'com.android.tools.r8.D8'
+    args "--lib", rootProject.external.moe_core.out.moe_core_jar, "--min-api", "21", "--output", "${buildDir}/moe-ios-dex.jar", rootProject.external.moe_core.out.moe_ios_jar
+
+    inputs.file(rootProject.external.moe_core.out.moe_ios_jar)
+    inputs.file(rootProject.external.moe_core.out.moe_core_jar)
+    outputs.file(ext.dexOutput)
+}
+
+task processDexiOSJUnit(type: JavaExec) {
+    classpath = project.files("/Users/berstanio/R8/r8/build/libs/r8.jar")
+    ext.dexOutput = file("${buildDir}/moe-ios-junit-dex.jar")
+
+    main 'com.android.tools.r8.D8'
+    args "--lib", rootProject.external.moe_core.out.moe_core_jar, "--lib", rootProject.external.moe_core.out.moe_ios_jar, "--min-api", "21", "--output", "${buildDir}/moe-ios-junit-dex.jar", rootProject.external.moe_core.out.moe_ios_junit_jar
+
+    inputs.file(rootProject.external.moe_core.out.moe_ios_junit_jar)
+    inputs.file(rootProject.external.moe_core.out.moe_ios_jar)
+    inputs.file(rootProject.external.moe_core.out.moe_core_jar)
+    outputs.file(ext.dexOutput)
+}
+
+task processSDK {
+    dependsOn processDexDesugaredJDK
+    dependsOn processDexCore
+    dependsOn processDexiOS
+    dependsOn processDexiOSJUnit
+}
+
+
 def buildfiles(def proj, def subpath, def closure) {
     files("${project(proj).buildDir.absolutePath}/$subpath", closure)
 }
@@ -59,6 +118,9 @@ def buildfiles(def proj, def subpath, def closure) {
 def getSDKCopySpec() {
     copySpec {
         into('sdk') {
+            from files(rootProject.external.moe_core.out.desugarjdk_json) {
+                rename rootProject.external.moe_core.out.desugarjdk_json.name, 'moe-desugared-lib.json'
+            }
             from files(rootProject.external.moe_core.out.moe_core_jar) {
                 rename rootProject.external.moe_core.out.moe_core_jar.name, 'moe-core.jar'
             }
@@ -88,6 +150,18 @@ def getSDKCopySpec() {
             }
             from files(rootProject.external.moe_core.out.moe_core_certificates_zip) {
                 rename rootProject.external.moe_core.out.moe_core_certificates_zip.name, 'moe-core-certificates.zip'
+            }
+            from files(processDexDesugaredJDK.dexOutput) {
+                rename processDexDesugaredJDK.dexOutput.name, processDexDesugaredJDK.dexOutput.name
+            }
+            from files(processDexCore.dexOutput) {
+                rename processDexCore.dexOutput.name, processDexCore.dexOutput.name
+            }
+            from files(processDexiOS.dexOutput) {
+                rename processDexiOS.dexOutput.name, processDexiOS.dexOutput.name
+            }
+            from files(processDexiOSJUnit.dexOutput) {
+                rename processDexiOSJUnit.dexOutput.name, processDexiOSJUnit.dexOutput.name
             }
         }
         into('sdk/iphoneos/MOE.framework') {
@@ -162,7 +236,7 @@ task sdk(type: Zip, dependsOn: buildDeps) {
     with getSDKCopySpec()
 }
 
-task devsdk(type: Copy, dependsOn: buildDeps) {
+task devsdk(type: Copy, dependsOn: [processSDK, buildDeps]) {
     destinationDir = file("$buildDir/dev-sdk")
     with getSDKCopySpec()
 }
