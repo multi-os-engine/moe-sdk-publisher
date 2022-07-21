@@ -55,9 +55,11 @@ if (!rootProject.hasProperty('moe.tools.sdk.mac_only')) {
 //////////////////////////////////////////////////////////////////////////
 // Prebuild dex files
 //////////////////////////////////////////////////////////////////////////
-
+def r8Jar = gradle.includedBuild("r8").projectDir.absolutePath + "/build/libs/r8.jar"
 task processDexDesugaredJDK(type: JavaExec) {
-    classpath = project.files("/Users/berstanio/R8/r8/build/libs/r8.jar")
+    dependsOn(gradle.includedBuild("r8").task(":r8"))
+
+    classpath = project.files(r8Jar)
     ext.dexOutput = file("${buildDir}/moe-desugared-dex.jar")
 
     main 'com.android.tools.r8.L8'
@@ -68,7 +70,9 @@ task processDexDesugaredJDK(type: JavaExec) {
 }
 
 task processDexCore(type: JavaExec) {
-    classpath = project.files("/Users/berstanio/R8/r8/build/libs/r8.jar")
+    dependsOn(gradle.includedBuild("r8").task(":r8"))
+
+    classpath = project.files(r8Jar)
     ext.dexOutput = file("${buildDir}/moe-core-dex.jar")
 
     main 'com.android.tools.r8.D8'
@@ -79,7 +83,9 @@ task processDexCore(type: JavaExec) {
 }
 
 task processDexiOS(type: JavaExec) {
-    classpath = project.files("/Users/berstanio/R8/r8/build/libs/r8.jar")
+    dependsOn(gradle.includedBuild("r8").task(":r8"))
+
+    classpath = project.files(r8Jar)
     ext.dexOutput = file("${buildDir}/moe-ios-dex.jar")
 
     main 'com.android.tools.r8.D8'
@@ -91,7 +97,9 @@ task processDexiOS(type: JavaExec) {
 }
 
 task processDexiOSJUnit(type: JavaExec) {
-    classpath = project.files("/Users/berstanio/R8/r8/build/libs/r8.jar")
+    dependsOn(gradle.includedBuild("r8").task(":r8"))
+
+    classpath = project.files(r8Jar)
     ext.dexOutput = file("${buildDir}/moe-ios-junit-dex.jar")
 
     main 'com.android.tools.r8.D8'
@@ -194,7 +202,7 @@ def getSDKCopySpec() {
                 rename 'moe.generator.natjgen.jar', 'wrapnatjgen.jar'
             }
 
-            from files('/Users/berstanio/R8/r8/build/libs/') {
+            from files(gradle.includedBuild("r8").projectDir.absolutePath + "/build/libs/") {
                 include 'r8.jar'
             }
 
