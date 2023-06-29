@@ -32,15 +32,23 @@ def projectDeps = [
         ':moe.binding.libimobiledevice',
         ':moe.generator.natjgen',
         ':moe.ios.device.launcher',
-        ':proguard:app',
 ]
 
 projectDeps.each { evaluationDependsOn it }
 
 mkdir buildDir
 
+task buildR8(type: Exec) {
+    // Lazy caching
+    inputs.dir("${external.r8.root}/src")
+    outputs.dir("${external.r8.root}/build")
+    workingDir "${external.r8.root}/r8"
+    commandLine "tools/gradle.py", "r8"
+}
+
 task buildDeps {
     projectDeps.each { dependsOn project(it).tasks.build }
+    dependsOn buildR8
 }
 
 if (!rootProject.hasProperty('moe.tools.sdk.exclude_mac')) {
@@ -149,8 +157,8 @@ def getSDKCopySpec() {
                 rename 'moe.generator.natjgen.jar', 'wrapnatjgen.jar'
             }
 
-            from buildfiles(':proguard:app', 'libs') {
-                include 'proguard.jar'
+            from files(external.r8.out) {
+                include 'r8.jar'
             }
 
             from files('.') {
