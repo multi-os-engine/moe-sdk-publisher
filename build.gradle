@@ -42,7 +42,7 @@ task buildR8(type: Exec) {
     // Lazy caching
     inputs.dir("${external.r8.root}/src")
     outputs.dir("${external.r8.root}/build")
-    workingDir "${external.r8.root}/r8"
+    workingDir "${external.r8.root}"
     commandLine "tools/gradle.py", "r8"
 }
 
